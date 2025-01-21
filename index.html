@@ -1,121 +1,230 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Пазл физическая карты Мира</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background-image: url('background.png'); /* Используем второй файл как фон */
-      background-size: cover;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    #puzzle {
-      position: relative;
-      display: grid;
-      grid-template-columns: repeat(var(--cols), 1fr);
-      width: 90%;
-      max-width: 600px;
-      aspect-ratio: 1;
-      border: 2px solid #000;
-      background-color: #fff;
-    }
-    .piece {
-      width: 100%;
-      height: 100%;
-      background-size: calc(var(--cols) * 100%) calc(var(--rows) * 100%);
-      background-image: url('puzzle.png'); /* Используем первый файл как изображение пазла */
-      background-repeat: no-repeat;
-      cursor: grab;
-      position: relative;
-    }
-    .hidden {
-      display: none;
-    }
-  </style>
-</head>
-<body>
-  <div id="puzzle"></div>
-
-  <script>
-    const rows = 4; // Настройте сложность: 4x4, 6x6, 8x8
-    const cols = 4;
-
-    document.documentElement.style.setProperty('--rows', rows);
-    document.documentElement.style.setProperty('--cols', cols);
-
-    const puzzleContainer = document.getElementById('puzzle');
-
-    let positions = [];
-
-    function initPuzzle() {
-      puzzleContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-      puzzleContainer.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-          const piece = document.createElement('div');
-          piece.classList.add('piece');
-          piece.style.backgroundPosition = `-${col * 100 / (cols - 1)}% -${row * 100 / (rows - 1)}%`;
-          piece.dataset.index = row * cols + col;
-
-          positions.push(piece.dataset.index);
-          puzzleContainer.appendChild(piece);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пазл физическая карты Мира</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('background.png');
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-      }
-      shufflePuzzle();
-      enableDragging();
-    }
 
-    function shufflePuzzle() {
-      const shuffled = positions.slice().sort(() => Math.random() - 0.5);
-      Array.from(puzzleContainer.children).forEach((child, i) => {
-        child.style.order = shuffled[i];
-      });
-    }
+        h1 {
+            color: white;
+            margin-top: 20px;
+        }
 
-    function enableDragging() {
-      let draggedPiece = null;
+        #controls {
+            margin: 20px;
+            text-align: center;
+        }
 
-      document.querySelectorAll('.piece').forEach(piece => {
-        piece.addEventListener('mousedown', (e) => {
-          draggedPiece = e.target;
-          draggedPiece.style.cursor = 'grabbing';
-        });
+        #gameCanvas {
+            border: 2px solid black;
+            touch-action: none;
+        }
 
-        piece.addEventListener('mouseup', () => {
-          draggedPiece.style.cursor = 'grab';
-          draggedPiece = null;
-        });
+        #finishMessage {
+            display: none;
+            background: white;
+            padding: 20px;
+            border: 2px solid black;
+            border-radius: 10px;
+            text-align: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
 
-        piece.addEventListener('dragstart', (e) => e.preventDefault());
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+        }
+    </style>
+</head>
 
-        piece.addEventListener('mousemove', (e) => {
-          if (draggedPiece) {
-            const rect = puzzleContainer.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+<body>
+    <h1>Пазл физическая карты Мира</h1>
+    <div id="controls">
+        <label for="difficulty">Выберите сложность:</label>
+        <select id="difficulty">
+            <option value="4">4x4</option>
+            <option value="6">6x6</option>
+            <option value="8">8x8</option>
+        </select>
+        <button onclick="startGame()">Старт</button>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <div id="finishMessage">
+        <h2>Поздравляю, вы завершили пазл!</h2>
+        <p id="timeTaken"></p>
+        <button onclick="closeMessage()">Закрыть</button>
+    </div>
 
-            draggedPiece.style.position = 'absolute';
-            draggedPiece.style.left = `${x}px`;
-            draggedPiece.style.top = `${y}px`;
-          }
-        });
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const finishMessage = document.getElementById('finishMessage');
+        const timeTakenText = document.getElementById('timeTaken');
+        let puzzleImage = new Image();
+        let pieces = [];
+        let rows = 4, cols = 4;
+        let pieceWidth, pieceHeight;
+        let startTime;
+        let draggedPiece = null;
+        let offsetX, offsetY;
 
-        piece.addEventListener('mouseleave', () => {
-          if (draggedPiece) {
-            draggedPiece.style.position = 'static';
-          }
-        });
-      });
-    }
+        // Load puzzle image
+        puzzleImage.src = 'puzzle.png';
+        puzzleImage.onload = () => {
+            startGame();
+        };
 
-    initPuzzle();
-  </script>
+        // Adjust canvas size for responsiveness
+        function adjustCanvasSize() {
+            const maxWidth = Math.min(window.innerWidth, 600); // Limit size for larger screens
+            canvas.width = maxWidth;
+            canvas.height = (puzzleImage.height / puzzleImage.width) * maxWidth;
+            pieceWidth = canvas.width / cols;
+            pieceHeight = canvas.height / rows;
+        }
+
+        // Start the game
+        function startGame() {
+            adjustCanvasSize();
+            const difficulty = document.getElementById('difficulty').value;
+            rows = cols = parseInt(difficulty);
+            pieces = [];
+            startTime = Date.now();
+            createPieces();
+            shufflePieces();
+            drawPuzzle();
+        }
+
+        // Create pieces
+        function createPieces() {
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    pieces.push({
+                        sx: col * pieceWidth,
+                        sy: row * pieceHeight,
+                        x: Math.random() * (canvas.width - pieceWidth),
+                        y: Math.random() * (canvas.height - pieceHeight)
+                    });
+                }
+            }
+        }
+
+        // Shuffle pieces
+        function shufflePieces() {
+            pieces.sort(() => Math.random() - 0.5);
+        }
+
+        // Draw the puzzle
+        function drawPuzzle() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const piece of pieces) {
+                ctx.drawImage(puzzleImage, piece.sx, piece.sy, pieceWidth, pieceHeight, piece.x, piece.y, pieceWidth, pieceHeight);
+                ctx.strokeRect(piece.x, piece.y, pieceWidth, pieceHeight);
+            }
+        }
+
+        // Detect if the puzzle is solved
+        function checkSolved() {
+            for (const piece of pieces) {
+                if (Math.abs(piece.x - piece.sx) > pieceWidth / 4 || Math.abs(piece.y - piece.sy) > pieceHeight / 4) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Show finish message
+        function showFinishMessage() {
+            const endTime = Date.now();
+            const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
+            timeTakenText.textContent = `Время выполнения: ${timeTaken} секунд.`;
+            finishMessage.style.display = 'block';
+        }
+
+        // Close finish message
+        function closeMessage() {
+            finishMessage.style.display = 'none';
+            startGame();
+        }
+
+        // Drag and drop functionality
+        canvas.addEventListener('mousedown', startDragging);
+        canvas.addEventListener('touchstart', startDragging);
+        canvas.addEventListener('mousemove', dragging);
+        canvas.addEventListener('touchmove', dragging);
+        canvas.addEventListener('mouseup', dropPiece);
+        canvas.addEventListener('touchend', dropPiece);
+
+        function startDragging(e) {
+            e.preventDefault();
+            const mousePos = getMousePos(e);
+            draggedPiece = pieces.find(piece => isInsidePiece(mousePos, piece));
+            if (draggedPiece) {
+                offsetX = mousePos.x - draggedPiece.x;
+                offsetY = mousePos.y - draggedPiece.y;
+            }
+        }
+
+        function dragging(e) {
+            if (!draggedPiece) return;
+            e.preventDefault();
+            const mousePos = getMousePos(e);
+            draggedPiece.x = mousePos.x - offsetX;
+            draggedPiece.y = mousePos.y - offsetY;
+            drawPuzzle();
+        }
+
+        function dropPiece(e) {
+            if (!draggedPiece) return;
+            e.preventDefault();
+            const targetX = Math.round(draggedPiece.x / pieceWidth) * pieceWidth;
+            const targetY = Math.round(draggedPiece.y / pieceHeight) * pieceHeight;
+
+            if (Math.abs(targetX - draggedPiece.sx) < pieceWidth / 2 && Math.abs(targetY - draggedPiece.sy) < pieceHeight / 2) {
+                draggedPiece.x = draggedPiece.sx;
+                draggedPiece.y = draggedPiece.sy;
+            }
+
+            draggedPiece = null;
+            drawPuzzle();
+
+            if (checkSolved()) {
+                showFinishMessage();
+            }
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: x - rect.left,
+                y: y - rect.top
+            };
+        }
+
+        function isInsidePiece(pos, piece) {
+            return pos.x > piece.x && pos.x < piece.x + pieceWidth &&
+                pos.y > piece.y && pos.y < piece.y + pieceHeight;
+        }
+    </script>
 </body>
+
 </html>
