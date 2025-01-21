@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Пазл физическая карты Мира</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-image: url('background.png'); /* Используем второй файл как фон */
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #puzzle {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(var(--cols), 1fr);
+      width: 90%;
+      max-width: 600px;
+      aspect-ratio: 1;
+      border: 2px solid #000;
+      background-color: #fff;
+    }
+    .piece {
+      width: 100%;
+      height: 100%;
+      background-size: calc(var(--cols) * 100%) calc(var(--rows) * 100%);
+      background-image: url('puzzle.png'); /* Используем первый файл как изображение пазла */
+      background-repeat: no-repeat;
+      cursor: grab;
+      position: relative;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="puzzle"></div>
+
+  <script>
+    const rows = 4; // Настройте сложность: 4x4, 6x6, 8x8
+    const cols = 4;
+
+    document.documentElement.style.setProperty('--rows', rows);
+    document.documentElement.style.setProperty('--cols', cols);
+
+    const puzzleContainer = document.getElementById('puzzle');
+
+    let positions = [];
+
+    function initPuzzle() {
+      puzzleContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+      puzzleContainer.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const piece = document.createElement('div');
+          piece.classList.add('piece');
+          piece.style.backgroundPosition = `-${col * 100 / (cols - 1)}% -${row * 100 / (rows - 1)}%`;
+          piece.dataset.index = row * cols + col;
+
+          positions.push(piece.dataset.index);
+          puzzleContainer.appendChild(piece);
+        }
+      }
+      shufflePuzzle();
+      enableDragging();
+    }
+
+    function shufflePuzzle() {
+      const shuffled = positions.slice().sort(() => Math.random() - 0.5);
+      Array.from(puzzleContainer.children).forEach((child, i) => {
+        child.style.order = shuffled[i];
+      });
+    }
+
+    function enableDragging() {
+      let draggedPiece = null;
+
+      document.querySelectorAll('.piece').forEach(piece => {
+        piece.addEventListener('mousedown', (e) => {
+          draggedPiece = e.target;
+          draggedPiece.style.cursor = 'grabbing';
+        });
+
+        piece.addEventListener('mouseup', () => {
+          draggedPiece.style.cursor = 'grab';
+          draggedPiece = null;
+        });
+
+        piece.addEventListener('dragstart', (e) => e.preventDefault());
+
+        piece.addEventListener('mousemove', (e) => {
+          if (draggedPiece) {
+            const rect = puzzleContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            draggedPiece.style.position = 'absolute';
+            draggedPiece.style.left = `${x}px`;
+            draggedPiece.style.top = `${y}px`;
+          }
+        });
+
+        piece.addEventListener('mouseleave', () => {
+          if (draggedPiece) {
+            draggedPiece.style.position = 'static';
+          }
+        });
+      });
+    }
+
+    initPuzzle();
+  </script>
+</body>
+</html>
