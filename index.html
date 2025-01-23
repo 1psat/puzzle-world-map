@@ -38,6 +38,8 @@
         #gameCanvas {
             border: 2px solid black;
             touch-action: none;
+            max-width: 100%;
+            height: auto;
         }
 
         #finishMessage {
@@ -105,7 +107,7 @@
         let draggedPiece = null;
         let offsetX, offsetY;
 
-        // Load puzzle image with adjusted scaling
+        // Load puzzle image
         function loadImage() {
             const selectedImage = imageChoice.value;
             puzzleImage.src = selectedImage === 'world' ? 'world_map.png' : 'kazakhstan_map.png';
@@ -115,28 +117,20 @@
             };
         }
 
-        // Adjust canvas size to fit the image properly
+        // Adjust canvas size for responsiveness
         function adjustCanvasSize() {
-            const maxWidth = Math.min(window.innerWidth, 600); // Max width for desktop
-            const aspectRatio = puzzleImage.width / puzzleImage.height;
-
-            // Set canvas size maintaining aspect ratio
-            if (window.innerWidth < 600) {
-                canvas.width = window.innerWidth * 0.9; // 90% of screen width
-            } else {
-                canvas.width = maxWidth;
-            }
-            canvas.height = canvas.width / aspectRatio;
-
+            const maxWidth = Math.min(window.innerWidth - 20, 600); // Limit size for larger screens
+            canvas.width = Math.min(puzzleImage.width, maxWidth);
+            canvas.height = (puzzleImage.height / puzzleImage.width) * canvas.width;
             pieceWidth = canvas.width / cols;
             pieceHeight = canvas.height / rows;
         }
 
         // Start the game
         function startGame() {
-            adjustCanvasSize();
             const difficulty = document.getElementById('difficulty').value;
             rows = cols = parseInt(difficulty);
+            adjustCanvasSize();
             pieces = [];
             startTime = Date.now();
             createPieces();
