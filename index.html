@@ -35,9 +35,24 @@
             color: white; /* Изменение цвета текста */
         }
 
-        #gameCanvas {
+        #piecesContainer, #boardContainer {
             border: 2px solid black;
-            touch-action: none;
+            margin: 10px;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        #piecesContainer {
+            width: 40%;
+            height: 600px;
+            overflow: auto;
+            background: #f0f0f0;
+        }
+
+        #boardContainer {
+            width: 50%;
+            height: 600px;
+            background: white;
         }
 
         #finishMessage {
@@ -63,6 +78,11 @@
         .image-selector {
             margin-bottom: 10px;
         }
+
+        .puzzle-piece {
+            position: absolute;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -84,7 +104,12 @@
         </select>
         <button onclick="startGame()">Старт</button>
     </div>
-    <canvas id="gameCanvas"></canvas>
+
+    <div id="piecesContainer"></div>
+    <div id="boardContainer">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
     <div id="finishMessage">
         <h2>Поздравляю, вы завершили пазл!</h2>
         <p id="timeTaken"></p>
@@ -97,6 +122,7 @@
         const finishMessage = document.getElementById('finishMessage');
         const timeTakenText = document.getElementById('timeTaken');
         const imageChoice = document.getElementById('imageChoice');
+        const piecesContainer = document.getElementById('piecesContainer');
         let puzzleImage = new Image();
         let pieces = [];
         let rows = 4, cols = 4;
@@ -108,7 +134,7 @@
         // Load puzzle image
         function loadImage() {
             const selectedImage = imageChoice.value;
-            puzzleImage.src = selectedImage === 'world' ? 'world_map.jpg' : 'kazakhstan_map.png';
+            puzzleImage.src = selectedImage === 'world' ? 'world_map.png' : 'kazakhstan_map.jpg';
             puzzleImage.onload = () => {
                 startGame();
             };
@@ -116,7 +142,7 @@
 
         // Adjust canvas size for responsiveness
         function adjustCanvasSize() {
-            const maxWidth = Math.min(window.innerWidth, 600); // Limit size for larger screens
+            const maxWidth = Math.min(window.innerWidth * 0.45, 600); // Limit size for larger screens
             canvas.width = maxWidth;
             canvas.height = (puzzleImage.height / puzzleImage.width) * maxWidth;
             pieceWidth = canvas.width / cols;
@@ -137,116 +163,56 @@
 
         // Create pieces
         function createPieces() {
+            piecesContainer.innerHTML = ''; // Clear container
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
-                    pieces.push({
-                        sx: col * pieceWidth,
-                        sy: row * pieceHeight,
-                        x: Math.random() * (canvas.width - pieceWidth),
-                        y: Math.random() * (canvas.height - pieceHeight)
-                    });
+                    const piece = document.createElement('img');
+                    piece.src = puzzleImage.src;
+                    piece.className = 'puzzle-piece';
+                    piece.style.width = `${pieceWidth}px`;
+                    piece.style.height = `${pieceHeight}px`;
+                    piece.style.clip = `rect(${row * pieceHeight}px, ${(col + 1) * pieceWidth}px, ${(row + 1) * pieceHeight}px, ${col * pieceWidth}px)`;
+                    piece.draggable = true;
+                    piece.ondragstart = (e) => dragStart(e, row, col);
+                    piecesContainer.appendChild(piece);
                 }
             }
         }
 
         // Shuffle pieces
         function shufflePieces() {
-            pieces.sort(() => Math.random() - 0.5);
+            [...piecesContainer.children].forEach(piece => {
+                piece.style.position = 'absolute';
+                piece.style.top = `${Math.random() * (piecesContainer.offsetHeight - piece.offsetHeight)}px`;
+                piece.style.left = `${Math.random() * (piecesContainer.offsetWidth - piece.offsetWidth)}px`;
+            });
         }
 
-        // Draw the puzzle
+        // Draw the puzzle board
         function drawPuzzle() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (const piece of pieces) {
-                ctx.drawImage(puzzleImage, piece.sx, piece.sy, pieceWidth, pieceHeight, piece.x, piece.y, pieceWidth, pieceHeight);
-                ctx.strokeRect(piece.x, piece.y, pieceWidth, pieceHeight);
-            }
-        }
-
-        // Detect if the puzzle is solved
-        function checkSolved() {
-            for (const piece of pieces) {
-                if (Math.abs(piece.x - piece.sx) > pieceWidth / 4 || Math.abs(piece.y - piece.sy) > pieceHeight / 4) {
-                    return false;
+            ctx.strokeStyle = 'black';
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    ctx.strokeRect(col * pieceWidth, row * pieceHeight, pieceWidth, pieceHeight);
                 }
             }
-            return true;
         }
 
-        // Show finish message
-        function showFinishMessage() {
-            const endTime = Date.now();
-            const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
-            timeTakenText.textContent = `Время выполнения: ${timeTaken} секунд.`;
-            finishMessage.style.display = 'block';
+        // Drag and drop handlers
+        function dragStart(e, row, col) {
+            e.dataTransfer.setData('text/plain', JSON.stringify({ row, col }));
         }
 
-        // Close finish message
-        function closeMessage() {
-            finishMessage.style.display = 'none';
-            startGame();
-        }
-
-        // Drag and drop functionality
-        canvas.addEventListener('mousedown', startDragging);
-        canvas.addEventListener('touchstart', startDragging);
-        canvas.addEventListener('mousemove', dragging);
-        canvas.addEventListener('touchmove', dragging);
-        canvas.addEventListener('mouseup', dropPiece);
-        canvas.addEventListener('touchend', dropPiece);
-
-        function startDragging(e) {
+        canvas.addEventListener('dragover', (e) => e.preventDefault());
+        canvas.addEventListener('drop', (e) => {
             e.preventDefault();
-            const mousePos = getMousePos(e);
-            draggedPiece = pieces.find(piece => isInsidePiece(mousePos, piece));
-            if (draggedPiece) {
-                offsetX = mousePos.x - draggedPiece.x;
-                offsetY = mousePos.y - draggedPiece.y;
-            }
-        }
-
-        function dragging(e) {
-            if (!draggedPiece) return;
-            e.preventDefault();
-            const mousePos = getMousePos(e);
-            draggedPiece.x = mousePos.x - offsetX;
-            draggedPiece.y = mousePos.y - offsetY;
-            drawPuzzle();
-        }
-
-        function dropPiece(e) {
-            if (!draggedPiece) return;
-            e.preventDefault();
-            const targetX = Math.round(draggedPiece.x / pieceWidth) * pieceWidth;
-            const targetY = Math.round(draggedPiece.y / pieceHeight) * pieceHeight;
-
-            if (Math.abs(targetX - draggedPiece.sx) < pieceWidth / 2 && Math.abs(targetY - draggedPiece.sy) < pieceHeight / 2) {
-                draggedPiece.x = draggedPiece.sx;
-                draggedPiece.y = draggedPiece.sy;
-            }
-
-            draggedPiece = null;
-            drawPuzzle();
-
-            if (checkSolved()) {
-                showFinishMessage();
-            }
-        }
-
-        function getMousePos(e) {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.touches ? e.touches[0].clientX : e.clientX;
-            const y = e.touches ? e.touches[0].clientY : e.clientY;
-            return {
-                x: x - rect.left,
-                y: y - rect.top
-            };
-        }
-
-        function isInsidePiece(pos, piece) {
-            return pos.x > piece.x && pos.x < piece.x + pieceWidth &&
-                pos.y > piece.y && pos.y < piece.y + pieceHeight;
-        }
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            const { row, col } = data;
+            const x = Math.floor(e.offsetX / pieceWidth) * pieceWidth;
+            const y = Math.floor(e.offsetY / pieceHeight) * pieceHeight;
+            ctx.drawImage(puzzleImage, col * pieceWidth, row * pieceHeight, pieceWidth, pieceHeight, x, y, pieceWidth, pieceHeight);
+        });
 
         // Load initial image
         loadImage();
