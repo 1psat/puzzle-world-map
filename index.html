@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Пазл физическая карты Казахстана</title>
+    <title>Собери пазл карты!</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,6 +25,10 @@
         #controls {
             margin: 20px;
             text-align: center;
+        }
+
+        label {
+            color: white;
         }
 
         #gameCanvas {
@@ -51,12 +55,23 @@
             cursor: pointer;
             margin: 5px;
         }
+
+        .image-selector {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 
 <body>
-    <h1>Пазл физическая карты Мира</h1>
+    <h1>Собери пазл карты!</h1>
     <div id="controls">
+        <div class="image-selector">
+            <label for="imageChoice">Выберите карту:</label>
+            <select id="imageChoice">
+                <option value="world">Физическая карта Мира</option>
+                <option value="kazakhstan">Физическая карта Казахстана</option>
+            </select>
+        </div>
         <label for="difficulty">Выберите сложность:</label>
         <select id="difficulty">
             <option value="4">4x4</option>
@@ -77,6 +92,7 @@
         const ctx = canvas.getContext('2d');
         const finishMessage = document.getElementById('finishMessage');
         const timeTakenText = document.getElementById('timeTaken');
+        const imageChoice = document.getElementById('imageChoice');
         let puzzleImage = new Image();
         let pieces = [];
         let rows = 4, cols = 4;
@@ -86,10 +102,13 @@
         let offsetX, offsetY;
 
         // Load puzzle image
-        puzzleImage.src = 'puzzle.png';
-        puzzleImage.onload = () => {
-            startGame();
-        };
+        function loadImage() {
+            const selectedImage = imageChoice.value;
+            puzzleImage.src = selectedImage === 'world' ? 'world_map.png' : 'kazakhstan_map.png';
+            puzzleImage.onload = () => {
+                startGame();
+            };
+        }
 
         // Adjust canvas size for responsiveness
         function adjustCanvasSize() {
@@ -224,7 +243,7 @@
             return pos.x > piece.x && pos.x < piece.x + pieceWidth &&
                 pos.y > piece.y && pos.y < piece.y + pieceHeight;
         }
-    </script>
-</body>
 
-</html>
+        // Load initial image
+        loadImage();
+        imageChoice.addEventListener('change', load
