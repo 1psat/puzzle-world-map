@@ -166,7 +166,9 @@
                         sy: row * pieceHeight,
                         x: Math.random() * (piecesCanvas.width - pieceWidth),
                         y: Math.random() * (piecesCanvas.height - pieceHeight),
-                        placed: false
+                        placed: false,
+                        originalRow: row,
+                        originalCol: col
                     });
                 }
             }
@@ -238,7 +240,7 @@
         function dragging(e) {
             if (!draggedPiece) return;
             e.preventDefault();
-            const mousePos = getMousePos(e, assemblyCanvas);
+            const mousePos = getMousePos(e, piecesCanvas);
             draggedPiece.x = mousePos.x - offsetX;
             draggedPiece.y = mousePos.y - offsetY;
             drawPiecesCanvas();
@@ -255,7 +257,12 @@
                 const targetX = col * pieceWidth;
                 const targetY = row * pieceHeight;
 
-                if (Math.abs(targetX - draggedPiece.sx) < pieceWidth / 2 && Math.abs(targetY - draggedPiece.sy) < pieceHeight / 2) {
+                if (
+                    Math.abs(targetX - draggedPiece.sx) < pieceWidth / 2 &&
+                    Math.abs(targetY - draggedPiece.sy) < pieceHeight / 2 &&
+                    draggedPiece.originalRow === row &&
+                    draggedPiece.originalCol === col
+                ) {
                     draggedPiece.x = targetX;
                     draggedPiece.y = targetY;
                     draggedPiece.placed = true;
