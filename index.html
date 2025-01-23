@@ -110,7 +110,7 @@
         // Load puzzle image
         function loadImage() {
             const selectedImage = imageChoice.value;
-            puzzleImage.src = selectedImage === 'world' ? 'world_map.png' : 'kazakhstan_map.png';
+            puzzleImage.src = selectedImage === 'world' ? 'world_map.jpg' : 'kazakhstan_map.png';
             puzzleImage.onload = () => {
                 adjustCanvasSize();
                 startGame();
