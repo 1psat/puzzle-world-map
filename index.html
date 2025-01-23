@@ -72,8 +72,8 @@
         <div class="image-selector">
             <label for="imageChoice">Выберите карту:</label>
             <select id="imageChoice">
-                <option value="world_map.png">Физическая карта Мира</option>
-                <option value="kazakhstan_map.png">Физическая карта Казахстана</option>
+                <option value="world">Физическая карта Мира</option>
+                <option value="kazakhstan">Физическая карта Казахстана</option>
             </select>
         </div>
         <label for="difficulty">Выберите сложность:</label>
@@ -105,19 +105,28 @@
         let draggedPiece = null;
         let offsetX, offsetY;
 
-        // Adjust canvas size for responsiveness
+        // Load puzzle image with adjusted scaling
+        function loadImage() {
+            const selectedImage = imageChoice.value;
+            puzzleImage.src = selectedImage === 'world' ? 'world_map.png' : 'kazakhstan_map.png';
+            puzzleImage.onload = () => {
+                adjustCanvasSize();
+                startGame();
+            };
+        }
+
+        // Adjust canvas size to fit the image properly
         function adjustCanvasSize() {
-            const maxWidth = Math.min(window.innerWidth * 0.9, 600);
-            const maxHeight = window.innerHeight * 0.6;
+            const maxWidth = Math.min(window.innerWidth, 600); // Max width for desktop
             const aspectRatio = puzzleImage.width / puzzleImage.height;
 
-            if (maxWidth / maxHeight > aspectRatio) {
-                canvas.height = maxHeight;
-                canvas.width = maxHeight * aspectRatio;
+            // Set canvas size maintaining aspect ratio
+            if (window.innerWidth < 600) {
+                canvas.width = window.innerWidth * 0.9; // 90% of screen width
             } else {
                 canvas.width = maxWidth;
-                canvas.height = maxWidth / aspectRatio;
             }
+            canvas.height = canvas.width / aspectRatio;
 
             pieceWidth = canvas.width / cols;
             pieceHeight = canvas.height / rows;
@@ -125,16 +134,14 @@
 
         // Start the game
         function startGame() {
-            puzzleImage.src = imageChoice.value;
-            puzzleImage.onload = () => {
-                rows = cols = parseInt(document.getElementById('difficulty').value);
-                adjustCanvasSize();
-                pieces = [];
-                startTime = Date.now();
-                createPieces();
-                shufflePieces();
-                drawPuzzle();
-            };
+            adjustCanvasSize();
+            const difficulty = document.getElementById('difficulty').value;
+            rows = cols = parseInt(difficulty);
+            pieces = [];
+            startTime = Date.now();
+            createPieces();
+            shufflePieces();
+            drawPuzzle();
         }
 
         // Create pieces
@@ -251,7 +258,8 @@
         }
 
         // Load initial image
-        startGame();
+        loadImage();
+        imageChoice.addEventListener('change', loadImage);
     </script>
 </body>
 
