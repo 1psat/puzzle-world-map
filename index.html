@@ -32,7 +32,7 @@
         }
 
         #difficulty {
-            color: white; /* Изменение цвета текста */
+            color: white;
         }
 
         #gameCanvas {
@@ -72,8 +72,8 @@
         <div class="image-selector">
             <label for="imageChoice">Выберите карту:</label>
             <select id="imageChoice">
-                <option value="world">Физическая карта Мира</option>
-                <option value="kazakhstan">Физическая карта Казахстана</option>
+                <option value="world_map.png">Физическая карта Мира</option>
+                <option value="kazakhstan_map.png">Физическая карта Казахстана</option>
             </select>
         </div>
         <label for="difficulty">Выберите сложность:</label>
@@ -105,34 +105,36 @@
         let draggedPiece = null;
         let offsetX, offsetY;
 
-        // Load puzzle image
-        function loadImage() {
-            const selectedImage = imageChoice.value;
-            puzzleImage.src = selectedImage === 'world' ? 'world_map.png' : 'kazakhstan_map.png';
-            puzzleImage.onload = () => {
-                startGame();
-            };
-        }
-
         // Adjust canvas size for responsiveness
         function adjustCanvasSize() {
-            const maxWidth = Math.min(window.innerWidth, 600); // Limit size for larger screens
-            canvas.width = maxWidth;
-            canvas.height = (puzzleImage.height / puzzleImage.width) * maxWidth;
+            const maxWidth = Math.min(window.innerWidth * 0.9, 600);
+            const maxHeight = window.innerHeight * 0.6;
+            const aspectRatio = puzzleImage.width / puzzleImage.height;
+
+            if (maxWidth / maxHeight > aspectRatio) {
+                canvas.height = maxHeight;
+                canvas.width = maxHeight * aspectRatio;
+            } else {
+                canvas.width = maxWidth;
+                canvas.height = maxWidth / aspectRatio;
+            }
+
             pieceWidth = canvas.width / cols;
             pieceHeight = canvas.height / rows;
         }
 
         // Start the game
         function startGame() {
-            adjustCanvasSize();
-            const difficulty = document.getElementById('difficulty').value;
-            rows = cols = parseInt(difficulty);
-            pieces = [];
-            startTime = Date.now();
-            createPieces();
-            shufflePieces();
-            drawPuzzle();
+            puzzleImage.src = imageChoice.value;
+            puzzleImage.onload = () => {
+                rows = cols = parseInt(document.getElementById('difficulty').value);
+                adjustCanvasSize();
+                pieces = [];
+                startTime = Date.now();
+                createPieces();
+                shufflePieces();
+                drawPuzzle();
+            };
         }
 
         // Create pieces
@@ -249,8 +251,7 @@
         }
 
         // Load initial image
-        loadImage();
-        imageChoice.addEventListener('change', loadImage);
+        startGame();
     </script>
 </body>
 
