@@ -32,27 +32,22 @@
         }
 
         #difficulty {
-            color: white; /* Изменение цвета текста */
+            color: white;
         }
 
-        #piecesContainer, #boardContainer {
+        #puzzleArea {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .canvasContainer {
             border: 2px solid black;
-            margin: 10px;
-            display: inline-block;
-            vertical-align: top;
+            position: relative;
         }
 
-        #piecesContainer {
-            width: 40%;
-            height: 600px;
-            overflow: auto;
-            background: #f0f0f0;
-        }
-
-        #boardContainer {
-            width: 50%;
-            height: 600px;
-            background: white;
+        canvas {
+            touch-action: none;
         }
 
         #finishMessage {
@@ -78,11 +73,6 @@
         .image-selector {
             margin-bottom: 10px;
         }
-
-        .puzzle-piece {
-            position: absolute;
-            cursor: pointer;
-        }
     </style>
 </head>
 
@@ -104,12 +94,14 @@
         </select>
         <button onclick="startGame()">Старт</button>
     </div>
-
-    <div id="piecesContainer"></div>
-    <div id="boardContainer">
-        <canvas id="gameCanvas"></canvas>
+    <div id="puzzleArea">
+        <div class="canvasContainer">
+            <canvas id="assemblyCanvas"></canvas>
+        </div>
+        <div class="canvasContainer">
+            <canvas id="piecesCanvas"></canvas>
+        </div>
     </div>
-
     <div id="finishMessage">
         <h2>Поздравляю, вы завершили пазл!</h2>
         <p id="timeTaken"></p>
@@ -117,12 +109,13 @@
     </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const assemblyCanvas = document.getElementById('assemblyCanvas');
+        const assemblyCtx = assemblyCanvas.getContext('2d');
+        const piecesCanvas = document.getElementById('piecesCanvas');
+        const piecesCtx = piecesCanvas.getContext('2d');
         const finishMessage = document.getElementById('finishMessage');
         const timeTakenText = document.getElementById('timeTaken');
         const imageChoice = document.getElementById('imageChoice');
-        const piecesContainer = document.getElementById('piecesContainer');
         let puzzleImage = new Image();
         let pieces = [];
         let rows = 4, cols = 4;
@@ -140,13 +133,15 @@
             };
         }
 
-        // Adjust canvas size for responsiveness
+        // Adjust canvas sizes for responsiveness
         function adjustCanvasSize() {
-            const maxWidth = Math.min(window.innerWidth * 0.45, 600); // Limit size for larger screens
-            canvas.width = maxWidth;
-            canvas.height = (puzzleImage.height / puzzleImage.width) * maxWidth;
-            pieceWidth = canvas.width / cols;
-            pieceHeight = canvas.height / rows;
+            const maxWidth = Math.min(window.innerWidth / 2 - 40, 400); // Limit size for larger screens
+            assemblyCanvas.width = maxWidth;
+            assemblyCanvas.height = maxWidth;
+            piecesCanvas.width = maxWidth;
+            piecesCanvas.height = maxWidth;
+            pieceWidth = assemblyCanvas.width / cols;
+            pieceHeight = assemblyCanvas.height / rows;
         }
 
         // Start the game
@@ -158,61 +153,138 @@
             startTime = Date.now();
             createPieces();
             shufflePieces();
-            drawPuzzle();
+            drawPiecesCanvas();
+            drawAssemblyCanvas();
         }
 
         // Create pieces
         function createPieces() {
-            piecesContainer.innerHTML = ''; // Clear container
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
-                    const piece = document.createElement('img');
-                    piece.src = puzzleImage.src;
-                    piece.className = 'puzzle-piece';
-                    piece.style.width = `${pieceWidth}px`;
-                    piece.style.height = `${pieceHeight}px`;
-                    piece.style.clip = `rect(${row * pieceHeight}px, ${(col + 1) * pieceWidth}px, ${(row + 1) * pieceHeight}px, ${col * pieceWidth}px)`;
-                    piece.draggable = true;
-                    piece.ondragstart = (e) => dragStart(e, row, col);
-                    piecesContainer.appendChild(piece);
+                    pieces.push({
+                        sx: col * pieceWidth,
+                        sy: row * pieceHeight,
+                        x: Math.random() * (piecesCanvas.width - pieceWidth),
+                        y: Math.random() * (piecesCanvas.height - pieceHeight),
+                        placed: false
+                    });
                 }
             }
         }
 
         // Shuffle pieces
         function shufflePieces() {
-            [...piecesContainer.children].forEach(piece => {
-                piece.style.position = 'absolute';
-                piece.style.top = `${Math.random() * (piecesContainer.offsetHeight - piece.offsetHeight)}px`;
-                piece.style.left = `${Math.random() * (piecesContainer.offsetWidth - piece.offsetWidth)}px`;
-            });
+            pieces.sort(() => Math.random() - 0.5);
         }
 
-        // Draw the puzzle board
-        function drawPuzzle() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = 'black';
-            for (let row = 0; row < rows; row++) {
-                for (let col = 0; col < cols; col++) {
-                    ctx.strokeRect(col * pieceWidth, row * pieceHeight, pieceWidth, pieceHeight);
+        // Draw pieces on the pieces canvas
+        function drawPiecesCanvas() {
+            piecesCtx.clearRect(0, 0, piecesCanvas.width, piecesCanvas.height);
+            for (const piece of pieces) {
+                if (!piece.placed) {
+                    piecesCtx.drawImage(puzzleImage, piece.sx, piece.sy, pieceWidth, pieceHeight, piece.x, piece.y, pieceWidth, pieceHeight);
+                    piecesCtx.strokeRect(piece.x, piece.y, pieceWidth, pieceHeight);
                 }
             }
         }
 
-        // Drag and drop handlers
-        function dragStart(e, row, col) {
-            e.dataTransfer.setData('text/plain', JSON.stringify({ row, col }));
+        // Draw the assembly canvas grid
+        function drawAssemblyCanvas() {
+            assemblyCtx.clearRect(0, 0, assemblyCanvas.width, assemblyCanvas.height);
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    assemblyCtx.strokeRect(col * pieceWidth, row * pieceHeight, pieceWidth, pieceHeight);
+                }
+            }
         }
 
-        canvas.addEventListener('dragover', (e) => e.preventDefault());
-        canvas.addEventListener('drop', (e) => {
+        // Detect if the puzzle is solved
+        function checkSolved() {
+            return pieces.every(piece => piece.placed);
+        }
+
+        // Show finish message
+        function showFinishMessage() {
+            const endTime = Date.now();
+            const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
+            timeTakenText.textContent = `Время выполнения: ${timeTaken} секунд.`;
+            finishMessage.style.display = 'block';
+        }
+
+        // Close finish message
+        function closeMessage() {
+            finishMessage.style.display = 'none';
+            startGame();
+        }
+
+        // Drag and drop functionality
+        piecesCanvas.addEventListener('mousedown', startDragging);
+        piecesCanvas.addEventListener('touchstart', startDragging);
+        assemblyCanvas.addEventListener('mousemove', dragging);
+        assemblyCanvas.addEventListener('touchmove', dragging);
+        assemblyCanvas.addEventListener('mouseup', dropPiece);
+        assemblyCanvas.addEventListener('touchend', dropPiece);
+
+        function startDragging(e) {
             e.preventDefault();
-            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-            const { row, col } = data;
-            const x = Math.floor(e.offsetX / pieceWidth) * pieceWidth;
-            const y = Math.floor(e.offsetY / pieceHeight) * pieceHeight;
-            ctx.drawImage(puzzleImage, col * pieceWidth, row * pieceHeight, pieceWidth, pieceHeight, x, y, pieceWidth, pieceHeight);
-        });
+            const mousePos = getMousePos(e, piecesCanvas);
+            draggedPiece = pieces.find(piece => !piece.placed && isInsidePiece(mousePos, piece));
+            if (draggedPiece) {
+                offsetX = mousePos.x - draggedPiece.x;
+                offsetY = mousePos.y - draggedPiece.y;
+            }
+        }
+
+        function dragging(e) {
+            if (!draggedPiece) return;
+            e.preventDefault();
+            const mousePos = getMousePos(e, assemblyCanvas);
+            draggedPiece.x = mousePos.x - offsetX;
+            draggedPiece.y = mousePos.y - offsetY;
+            drawPiecesCanvas();
+        }
+
+        function dropPiece(e) {
+            if (!draggedPiece) return;
+            e.preventDefault();
+            const mousePos = getMousePos(e, assemblyCanvas);
+            const col = Math.floor(mousePos.x / pieceWidth);
+            const row = Math.floor(mousePos.y / pieceHeight);
+
+            if (col >= 0 && col < cols && row >= 0 && row < rows) {
+                const targetX = col * pieceWidth;
+                const targetY = row * pieceHeight;
+
+                if (Math.abs(targetX - draggedPiece.sx) < pieceWidth / 2 && Math.abs(targetY - draggedPiece.sy) < pieceHeight / 2) {
+                    draggedPiece.x = targetX;
+                    draggedPiece.y = targetY;
+                    draggedPiece.placed = true;
+                }
+            }
+
+            draggedPiece = null;
+            drawPiecesCanvas();
+            drawAssemblyCanvas();
+
+            if (checkSolved()) {
+                showFinishMessage();
+            }
+        }
+
+        function getMousePos(e, canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: x - rect.left,
+                y: y - rect.top
+            };
+        }
+
+        function isInsidePiece(pos, piece) {
+            return pos.x > piece.x && pos.x < piece.x + pieceWidth &&
+                pos.y > piece.y && pos.y < piece.y + pieceHeight;
+        }
 
         // Load initial image
         loadImage();
