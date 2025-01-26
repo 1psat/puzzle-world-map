@@ -93,12 +93,25 @@
         <button onclick="closeMessage()">Закрыть</button>
     </div>
 
+    <audio id="backgroundMusic" loop>
+        <source src="background_music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <audio id="winSound">
+        <source src="win_sound.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const finishMessage = document.getElementById('finishMessage');
         const timeTakenText = document.getElementById('timeTaken');
         const imageChoice = document.getElementById('imageChoice');
+        const backgroundMusic = document.getElementById('backgroundMusic');
+        const winSound = document.getElementById('winSound');
+
         let puzzleImage = new Image();
         let pieces = [];
         let rows = 4, cols = 4;
@@ -136,6 +149,10 @@
             createPieces();
             shufflePieces();
             drawPuzzle();
+
+            // Play background music
+            backgroundMusic.currentTime = 0;
+            backgroundMusic.play();
         }
 
         // Create pieces
@@ -182,6 +199,11 @@
             const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
             timeTakenText.textContent = `Время выполнения: ${timeTaken} секунд.`;
             finishMessage.style.display = 'block';
+
+            // Stop background music and play win sound
+            backgroundMusic.pause();
+            winSound.currentTime = 0;
+            winSound.play();
         }
 
         // Close finish message
