@@ -40,7 +40,6 @@
             touch-action: none;
             max-width: 100%;
             height: auto;
-            position: relative;
         }
 
         #finishMessage {
@@ -65,12 +64,6 @@
 
         .image-selector {
             margin-bottom: 10px;
-        }
-
-        .segment-boundary {
-            position: absolute;
-            border: 1px dashed rgba(0, 0, 0, 0.3);
-            pointer-events: none;
         }
     </style>
 </head>
@@ -102,10 +95,12 @@
 
     <audio id="backgroundMusic" loop>
         <source src="background_music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
     </audio>
 
     <audio id="winSound">
         <source src="win_sound.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
     </audio>
 
     <script>
@@ -116,6 +111,7 @@
         const imageChoice = document.getElementById('imageChoice');
         const backgroundMusic = document.getElementById('backgroundMusic');
         const winSound = document.getElementById('winSound');
+
         let puzzleImage = new Image();
         let pieces = [];
         let rows = 4, cols = 4;
@@ -145,7 +141,6 @@
 
         // Start the game
         function startGame() {
-            backgroundMusic.play();
             const difficulty = document.getElementById('difficulty').value;
             rows = cols = parseInt(difficulty);
             adjustCanvasSize();
@@ -154,7 +149,10 @@
             createPieces();
             shufflePieces();
             drawPuzzle();
-            drawSegmentBoundaries();
+
+            // Play background music
+            backgroundMusic.currentTime = 0;
+            backgroundMusic.play();
         }
 
         // Create pieces
@@ -176,37 +174,28 @@
             pieces.sort(() => Math.random() - 0.5);
         }
 
+                // Draw the puzzle with parallelepiped shapes
+        function drawPuzzle() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const piece of pieces) {
+                drawParallelepiped(piece);
+            }
+        }
+
+        function drawParallelepiped(piece) {
+            ctx.drawImage(
+                puzzleImage,
+                piece.sx, piece.sy, pieceWidth, pieceHeight,
+                piece.x, piece.y, pieceWidth, pieceHeight
+            );
+        }
+
         // Draw the puzzle
         function drawPuzzle() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (const piece of pieces) {
-                ctx.drawImage(
-                    puzzleImage,
-                    piece.sx, piece.sy, pieceWidth, pieceHeight,
-                    piece.x, piece.y, pieceWidth, pieceHeight
-                );
-            }
-        }
-
-        // Draw segment boundaries
-        function drawSegmentBoundaries() {
-            const container = document.body;
-            const rect = canvas.getBoundingClientRect();
-
-            // Remove any existing boundaries
-            const existingBoundaries = document.querySelectorAll('.segment-boundary');
-            existingBoundaries.forEach(boundary => boundary.remove());
-
-            for (let row = 0; row < rows; row++) {
-                for (let col = 0; col < cols; col++) {
-                    const boundary = document.createElement('div');
-                    boundary.className = 'segment-boundary';
-                    boundary.style.left = ${rect.left + col * pieceWidth}px;
-                    boundary.style.top = ${rect.top + row * pieceHeight}px;
-                    boundary.style.width = ${pieceWidth}px;
-                    boundary.style.height = ${pieceHeight}px;
-                    container.appendChild(boundary);
-                }
+                ctx.drawImage(puzzleImage, piece.sx, piece.sy, pieceWidth, pieceHeight, piece.x, piece.y, pieceWidth, pieceHeight);
+                ctx.strokeRect(piece.x, piece.y, pieceWidth, pieceHeight);
             }
         }
 
@@ -222,13 +211,15 @@
 
         // Show finish message
         function showFinishMessage() {
-            backgroundMusic.pause();
-            backgroundMusic.currentTime = 0;
-            winSound.play();
             const endTime = Date.now();
             const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
-            timeTakenText.textContent = Время выполнения: ${timeTaken} секунд.;
+            timeTakenText.textContent = `Время выполнения: ${timeTaken} секунд.`;
             finishMessage.style.display = 'block';
+
+            // Stop background music and play win sound
+            backgroundMusic.pause();
+            winSound.currentTime = 0;
+            winSound.play();
         }
 
         // Close finish message
@@ -262,7 +253,6 @@
             draggedPiece.x = mousePos.x - offsetX;
             draggedPiece.y = mousePos.y - offsetY;
             drawPuzzle();
-            drawSegmentBoundaries();
         }
 
         function dropPiece(e) {
@@ -278,7 +268,6 @@
 
             draggedPiece = null;
             drawPuzzle();
-            drawSegmentBoundaries();
 
             if (checkSolved()) {
                 showFinishMessage();
