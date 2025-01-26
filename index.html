@@ -40,6 +40,7 @@
             touch-action: none;
             max-width: 100%;
             height: auto;
+            position: relative;
         }
 
         #finishMessage {
@@ -64,6 +65,12 @@
 
         .image-selector {
             margin-bottom: 10px;
+        }
+
+        .grid-label {
+            position: absolute;
+            font-size: 12px;
+            color: rgba(0, 0, 0, 0.6);
         }
     </style>
 </head>
@@ -147,6 +154,7 @@
             createPieces();
             shufflePieces();
             drawPuzzle();
+            drawGridLabels();
         }
 
         // Create pieces
@@ -182,6 +190,21 @@
                 piece.sx, piece.sy, pieceWidth, pieceHeight,
                 piece.x, piece.y, pieceWidth, pieceHeight
             );
+        }
+
+        // Draw grid labels for reference
+        function drawGridLabels() {
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const labelX = col * pieceWidth + pieceWidth / 2;
+                    const labelY = row * pieceHeight + pieceHeight / 2;
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+                    ctx.font = "12px Arial";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(`${row + 1},${col + 1}`, labelX, labelY);
+                }
+            }
         }
 
         // Detect if the puzzle is solved
@@ -236,6 +259,7 @@
             draggedPiece.x = mousePos.x - offsetX;
             draggedPiece.y = mousePos.y - offsetY;
             drawPuzzle();
+            drawGridLabels();
         }
 
         function dropPiece(e) {
@@ -251,6 +275,7 @@
 
             draggedPiece = null;
             drawPuzzle();
+            drawGridLabels();
 
             if (checkSolved()) {
                 showFinishMessage();
