@@ -289,6 +289,10 @@
                 pos.y > piece.y && pos.y < piece.y + pieceHeight;
         }
 
+        // Load initial image
+        loadImage();
+        imageChoice.addEventListener('change', loadImage);
+    </script>
 </body>
 
 </html>
