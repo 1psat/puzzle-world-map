@@ -218,6 +218,20 @@
         function drawSegmentBoundaries() {
             const container = document.body;
             const rect = canvas.getBoundingClientRect();
+
+            // Remove any existing boundaries
+            const existingBoundaries = document.querySelectorAll('.segment-boundary');
+            existingBoundaries.forEach(boundary => boundary.remove());
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const boundary = document.createElement('div');
+                    boundary.className = 'segment-boundary';
+                    boundary.style.left = `${rect.left + col * pieceWidth}px`;
+                    boundary.style.top = `${rect.top + row * pieceHeight}px`;
+                    boundary.style.width = `${pieceWidth}px`;
+                    boundary.style.height = `${pieceHeight}px`;
+                    container.appendChild(boundary);
                 }
             }
         }
