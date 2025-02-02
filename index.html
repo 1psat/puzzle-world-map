@@ -120,6 +120,7 @@
         let draggedPiece = null;
         let offsetX, offsetY;
 
+        // Load puzzle image
         function loadImage() {
             const selectedImage = imageChoice.value;
             puzzleImage.src = selectedImage === 'world' ? 'world_map.png' : 'kazakhstan_map.png';
@@ -129,14 +130,16 @@
             };
         }
 
+        // Adjust canvas size for responsiveness
         function adjustCanvasSize() {
-            const maxWidth = Math.min(window.innerWidth - 20, 600);
+            const maxWidth = Math.min(window.innerWidth - 20, 600); // Limit size for larger screens
             canvas.width = Math.min(puzzleImage.width, maxWidth);
             canvas.height = (puzzleImage.height / puzzleImage.width) * canvas.width;
             pieceWidth = canvas.width / cols;
             pieceHeight = canvas.height / rows;
         }
 
+        // Start the game
         function startGame() {
             const difficulty = document.getElementById('difficulty').value;
             rows = cols = parseInt(difficulty);
@@ -146,10 +149,13 @@
             createPieces();
             shufflePieces();
             drawPuzzle();
+
+            // Play background music
             backgroundMusic.currentTime = 0;
             backgroundMusic.play();
         }
 
+        // Create pieces
         function createPieces() {
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
@@ -163,31 +169,171 @@
             }
         }
 
-        function checkSolved() {
-            return pieces.every(piece => Math.abs(piece.x - piece.sx) < pieceWidth / 4 && Math.abs(piece.y - piece.sy) < pieceHeight / 4);
+        // Shuffle pieces
+        function shufflePieces() {
+            pieces.sort(() => Math.random() - 0.5);
         }
 
+                // Draw the puzzle with parallelepiped shapes
+        function drawPuzzle() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const piece of pieces) {
+                drawParallelepiped(piece);
+            }
+        }
+
+        function drawParallelepiped(piece) {
+            ctx.drawImage(
+                puzzleImage,
+                piece.sx, piece.sy, pieceWidth, pieceHeight,
+                piece.x, piece.y, pieceWidth, pieceHeight
+            );
+        }
+
+        // Draw the puzzle
+        function drawPuzzle() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const piece of pieces) {
+                ctx.drawImage(puzzleImage, piece.sx, piece.sy, pieceWidth, pieceHeight, piece.x, piece.y, pieceWidth, pieceHeight);
+                ctx.strokeRect(piece.x, piece.y, pieceWidth, pieceHeight);
+            }
+        }
+
+        // Detect if the puzzle is solved
+        function checkSolved() {
+            for (const piece of pieces) {
+                if (Math.abs(piece.x - piece.sx) > pieceWidth / 4 || Math.abs(piece.y - piece.sy) > pieceHeight / 4) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Show finish message
         function showFinishMessage() {
             const endTime = Date.now();
             const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
             timeTakenText.textContent = `Время выполнения: ${timeTaken} секунд.`;
             finishMessage.style.display = 'block';
+
+            // Stop background music and play win sound
             backgroundMusic.pause();
             winSound.currentTime = 0;
             winSound.play();
         }
-    </script>
 
+        // Close finish message
+        function closeMessage() {
+            finishMessage.style.display = 'none';
+            startGame();
+        }
+
+        // Drag and drop functionality
+        canvas.addEventListener('mousedown', startDragging);
+        canvas.addEventListener('touchstart', startDragging);
+        canvas.addEventListener('mousemove', dragging);
+        canvas.addEventListener('touchmove', dragging);
+        canvas.addEventListener('mouseup', dropPiece);
+        canvas.addEventListener('touchend', dropPiece);
+
+        function startDragging(e) {
+            e.preventDefault();
+            const mousePos = getMousePos(e);
+            draggedPiece = pieces.find(piece => isInsidePiece(mousePos, piece));
+            if (draggedPiece) {
+                offsetX = mousePos.x - draggedPiece.x;
+                offsetY = mousePos.y - draggedPiece.y;
+            }
+        }
+
+        function dragging(e) {
+            if (!draggedPiece) return;
+            e.preventDefault();
+            const mousePos = getMousePos(e);
+            draggedPiece.x = mousePos.x - offsetX;
+            draggedPiece.y = mousePos.y - offsetY;
+            drawPuzzle();
+        }
+
+        function dropPiece(e) {
+            if (!draggedPiece) return;
+            e.preventDefault();
+            const targetX = Math.round(draggedPiece.x / pieceWidth) * pieceWidth;
+            const targetY = Math.round(draggedPiece.y / pieceHeight) * pieceHeight;
+
+            if (Math.abs(targetX - draggedPiece.sx) < pieceWidth / 2 && Math.abs(targetY - draggedPiece.sy) < pieceHeight / 2) {
+                draggedPiece.x = draggedPiece.sx;
+                draggedPiece.y = draggedPiece.sy;
+            }
+
+            draggedPiece = null;
+            drawPuzzle();
+
+            if (checkSolved()) {
+                showFinishMessage();
+            }
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: x - rect.left,
+                y: y - rect.top
+            };
+        }
+
+        function isInsidePiece(pos, piece) {
+            return pos.x > piece.x && pos.x < piece.x + pieceWidth &&
+                pos.y > piece.y && pos.y < piece.y + pieceHeight;
+        }
+
+        // Load initial image
+        loadImage();
+        imageChoice.addEventListener('change', loadImage);
+    </script>
+    
     <div id="hintBox" style="display: none;">
         <p>1. Укажите на карте мелкосопочник Сарыарка.</p>
         <p>2. Покажите, где находится река Иртыш.</p>
         <p>3. Укажите, где располагается Прикаспийская низменность.</p>
     </div>
 
+    <style>
+        #hintBox {
+            width: 300px;
+            padding: 10px;
+            border: 2px solid black;
+            background-color: white;
+            text-align: center;
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 16px;
+        }
+        
+        @media (max-width: 600px) {
+            #hintBox {
+                width: 90%;
+                font-size: 14px;
+                padding: 8px;
+                bottom: 120px;
+            }
+        }
+    </style>
+
     <script>
         document.getElementById('imageChoice').addEventListener('change', function() {
-            document.getElementById('hintBox').style.display = this.value === 'kazakhstan' ? 'block' : 'none';
+            const hintBox = document.getElementById('hintBox');
+            if (this.value === 'kazakhstan') {
+                hintBox.style.display = 'block';
+            } else {
+                hintBox.style.display = 'none';
+            }
         });
     </script>
 </body>
+
 </html>
