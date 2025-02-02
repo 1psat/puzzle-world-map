@@ -199,6 +199,16 @@
             }
         }
 
+        // Detect if the puzzle is solved
+        function checkSolved() {
+            for (const piece of pieces) {
+                if (Math.abs(piece.x - piece.sx) > pieceWidth / 4 || Math.abs(piece.y - piece.sy) > pieceHeight / 4) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         // Show finish message
         function showFinishMessage() {
             const endTime = Date.now();
@@ -215,7 +225,6 @@
         // Close finish message
         function closeMessage() {
             finishMessage.style.display = 'none';
-            startGame();
         }
 
         // Drag and drop functionality
