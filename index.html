@@ -294,7 +294,7 @@
         imageChoice.addEventListener('change', loadImage);
     </script>
     
-    <div id="hintBox">
+    <div id="hintBox" style="display: none;">
         <p>1. Укажите на карте мелкосопочник Сарыарка.</p>
         <p>2. Покажите, где находится река Иртыш.</p>
         <p>3. Укажите, где располагается Прикаспийская низменность.</p>
@@ -308,7 +308,7 @@
             background-color: white;
             text-align: center;
             position: fixed;
-            bottom: 60px;
+            bottom: 100px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 16px;
@@ -319,10 +319,21 @@
                 width: 90%;
                 font-size: 14px;
                 padding: 8px;
-                bottom: 80px;
+                bottom: 120px;
             }
         }
     </style>
+
+    <script>
+        document.getElementById('imageChoice').addEventListener('change', function() {
+            const hintBox = document.getElementById('hintBox');
+            if (this.value === 'kazakhstan') {
+                hintBox.style.display = 'block';
+            } else {
+                hintBox.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 
 </html>
