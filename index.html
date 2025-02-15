@@ -132,11 +132,12 @@
 
         // Adjust canvas size for responsiveness
         function adjustCanvasSize() {
-            const maxWidth = Math.min(window.innerWidth - 20, 600); // Limit size for larger screens
-            canvas.width = Math.min(puzzleImage.width, maxWidth);
-            canvas.height = (puzzleImage.height / puzzleImage.width) * canvas.width;
-            pieceWidth = canvas.width / cols;
-            pieceHeight = canvas.height / rows;
+            const maxWidth = Math.min(window.innerWidth - 20, 600);
+            canvas.width = maxWidth;
+            canvas.height = Math.round((puzzleImage.height / puzzleImage.width) * canvas.width);
+
+            pieceWidth = Math.floor(canvas.width / cols);
+            pieceHeight = Math.floor(canvas.height / rows);
         }
 
 
@@ -158,16 +159,15 @@
 
         // Create pieces
         function createPieces() {
+            pieces = [];
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
                     pieces.push({
-                        sx: col * pieceWidth,
-                        sy: row * pieceHeight,
+                        sx: col * Math.floor(puzzleImage.width / cols), // Исправлено
+                        sy: row * Math.floor(puzzleImage.height / rows), // Исправлено
                         x: Math.random() * (canvas.width - pieceWidth),
                         y: Math.random() * (canvas.height - pieceHeight)
-                    });
-                }
-            }
+
         }
 
         // Shuffle pieces
