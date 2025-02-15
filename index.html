@@ -130,14 +130,17 @@
             };
         }
 
-        // Adjust canvas size for responsiveness
         function adjustCanvasSize() {
-            const maxWidth = Math.min(window.innerWidth - 20, 600); // Limit size for larger screens
-            canvas.width = Math.min(puzzleImage.width, maxWidth);
+            const maxWidth = Math.min(window.innerWidth - 20, 600);
+            canvas.width = maxWidth;
             canvas.height = (puzzleImage.height / puzzleImage.width) * canvas.width;
-            pieceWidth = canvas.width / cols;
-            pieceHeight = canvas.height / rows;
+
+            pieceWidth = Math.floor(canvas.width / cols);
+            pieceHeight = Math.floor(canvas.height / rows);
+
+            canvas.style.touchAction = "none"; // Отключает нежелательные жесты
         }
+
 
         // Start the game
         function startGame() {
