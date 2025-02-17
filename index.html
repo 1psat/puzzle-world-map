@@ -288,6 +288,35 @@
                 pos.y > piece.y && pos.y < piece.y + pieceHeight;
         }
 
+        @media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 18px;
+        text-align: center;
+    }
+
+    #controls {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    select, button {
+        width: 90%;
+        font-size: 14px;
+    }
+
+    canvas {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+
         // Load initial image
         loadImage();
         imageChoice.addEventListener('change', loadImage);
