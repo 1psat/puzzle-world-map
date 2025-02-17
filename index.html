@@ -130,18 +130,15 @@
             };
         }
 
-        // Корректировка размеров холста и пазла
+        // Adjust canvas size for responsiveness
         function adjustCanvasSize() {
-            const maxWidth = Math.min(window.innerWidth - 20, 600);
-            const aspectRatio = puzzleImage.width / puzzleImage.height;
-    
-            canvas.width = maxWidth;
-            canvas.height = maxWidth / aspectRatio;
-    
+            const maxWidth = Math.min(window.innerWidth - 20, 600); // Limit size for larger screens
+            canvas.width = Math.min(puzzleImage.width, maxWidth);
+            canvas.height = (puzzleImage.height / puzzleImage.width) * canvas.width;
             pieceWidth = canvas.width / cols;
             pieceHeight = canvas.height / rows;
         }
-    
+
         // Start the game
         function startGame() {
             const difficulty = document.getElementById('difficulty').value;
@@ -295,6 +292,36 @@
         loadImage();
         imageChoice.addEventListener('change', loadImage);
     </script>
+    
+    <div id="hintBox" style="display: none;">
+        <p>1. Укажите на карте мелкосопочник Сарыарка.</p>
+        <p>2. Покажите, где находится река Иртыш.</p>
+        <p>3. Укажите, где располагается Прикаспийская низменность.</p>
+    </div>
+
+    <style>
+        #hintBox {
+            width: 300px;
+            padding: 10px;
+            border: 2px solid black;
+            background-color: white;
+            text-align: center;
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 16px;
+        }
+        
+        @media (max-width: 600px) {
+            #hintBox {
+                width: 90%;
+                font-size: 14px;
+                padding: 8px;
+                bottom: 120px;
+            }
+        }
+    </style>
 
     <script>
         document.getElementById('imageChoice').addEventListener('change', function() {
