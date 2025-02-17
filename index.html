@@ -130,15 +130,18 @@
             };
         }
 
-        // Adjust canvas size for responsiveness
+        // Корректировка размеров холста и пазла
         function adjustCanvasSize() {
-            const maxWidth = Math.min(window.innerWidth - 20, 600); // Limit size for larger screens
-            canvas.width = Math.min(puzzleImage.width, maxWidth);
-            canvas.height = (puzzleImage.height / puzzleImage.width) * canvas.width;
+            const maxWidth = Math.min(window.innerWidth - 20, 600);
+            const aspectRatio = puzzleImage.width / puzzleImage.height;
+    
+            canvas.width = maxWidth;
+            canvas.height = maxWidth / aspectRatio;
+    
             pieceWidth = canvas.width / cols;
             pieceHeight = canvas.height / rows;
         }
-
+    
         // Start the game
         function startGame() {
             const difficulty = document.getElementById('difficulty').value;
@@ -213,7 +216,7 @@
         function showFinishMessage() {
             const endTime = Date.now();
             const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
-            timeTakenText.textContent = `Время выполнения: ${timeTaken} секунд.`;
+            timeTakenText.textContent = Время выполнения: ${timeTaken} секунд.;
             finishMessage.style.display = 'block';
 
             // Stop background music and play win sound
@@ -288,45 +291,10 @@
                 pos.y > piece.y && pos.y < piece.y + pieceHeight;
         }
 
-        @media (max-width: 600px) {
-    body {
-        padding: 10px;
-    }
-
-    h1 {
-        font-size: 18px;
-        text-align: center;
-    }
-
-    #controls {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    select, button {
-        width: 90%;
-        font-size: 14px;
-    }
-
-    canvas {
-        max-width: 100%;
-        height: auto;
-    }
-}
-
-
         // Load initial image
         loadImage();
         imageChoice.addEventListener('change', loadImage);
     </script>
-    
-    <div id="hintBox" style="display: none;">
-        <p>1. Укажите на карте мелкосопочник Сарыарка.</p>
-        <p>2. Покажите, где находится река Иртыш.</p>
-        <p>3. Укажите, где располагается Прикаспийская низменность.</p>
-    </div>
 
     <script>
         document.getElementById('imageChoice').addEventListener('change', function() {
