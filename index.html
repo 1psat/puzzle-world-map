@@ -213,7 +213,7 @@
         function showFinishMessage() {
             const endTime = Date.now();
             const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
-            timeTakenText.textContent = Время выполнения: ${timeTaken} секунд.;
+            timeTakenText.textContent = `Время выполнения: ${timeTaken} секунд.`;
             finishMessage.style.display = 'block';
 
             // Stop background music and play win sound
@@ -334,5 +334,3 @@
         });
     </script>
 </body>
-
-</html>
