@@ -131,13 +131,17 @@
         }
 
         // Adjust canvas size for responsiveness
-        function adjustCanvasSize() {
-            const maxWidth = Math.min(window.innerWidth - 20, 600); // Limit size for larger screens
-            canvas.width = Math.min(puzzleImage.width, maxWidth);
-            canvas.height = (puzzleImage.height / puzzleImage.width) * canvas.width;
-            pieceWidth = canvas.width / cols;
-            pieceHeight = canvas.height / rows;
-        }
+        // Корректировка размеров холста и пазла
+    function adjustCanvasSize() {
+    const maxWidth = Math.min(window.innerWidth - 20, 600);
+        const aspectRatio = puzzleImage.width / puzzleImage.height;
+    
+        canvas.width = maxWidth;
+        canvas.height = maxWidth / aspectRatio;
+    
+        pieceWidth = canvas.width / cols;
+        pieceHeight = canvas.height / rows;
+    }
 
         // Start the game
         function startGame() {
